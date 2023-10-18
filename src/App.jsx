@@ -2,56 +2,84 @@ import { useEffect, useState } from "react";
 import FormTodo from "./FormTodo";
 
 function App() {
+  let BASE_URL = "http://127.0.0.1:8000";
   const [todos, setTodos] = useState([]);
   useEffect(() => {
     loadTodos();
   }, []);
-  const loadTodos = () => {
-    setTodos([
-      {
-        userId: 1,
-        id: 1,
-        title: "delectus aut autem",
-        completed: false,
-      },
-      {
-        userId: 1,
-        id: 2,
-        title: "quis ut nam facilis et officia qui",
-        completed: true,
-      },
-      {
-        userId: 1,
-        id: 3,
-        title: "fugiat veniam minus",
-        completed: false,
-      },
-    ]);
+  const loadTodos = async () => {
+    try {
+      const resp = await fetch(BASE_URL + "/todos");
+      const data = await resp.json();
+      setTodos(data);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
-  const addTodo = (title) => {
-    const newTodos = [
-      ...todos,
-      {
-        title,
-        completed: false,
-        user_id: 1,
-        id: Math.floor(Math.random() * 10),
+  const addTodo = async (title) => {
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    ];
-    setTodos(newTodos);
+      body: JSON.stringify({ title: title, completed: false }),
+    };
+
+    try {
+      const resp = await fetch(BASE_URL + "/todos/", options);
+      const todo = await resp.json();
+      setTodos([...todos, todo]);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
-  const markTodo = (id) => {
+  const markTodo = async (id) => {
     const newTodos = [...todos];
     const newTodo = newTodos.find((todo) => todo.id === id);
     newTodo.completed = !newTodo.completed;
     setTodos(newTodos);
+
+    const options = {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(newTodo),
+    };
+
+    try {
+      const resp = await fetch(BASE_URL + "/todos/" + id, options);
+      const data = await resp.json();
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+    }
+
+    /* setTodos(
+      todos.map((todo) =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    ); */
   };
 
-  const removeTodo = (id) => {
-    const newTodos = todos.filter((todo) => todo.id !== id);
-    setTodos(newTodos);
+  const removeTodo = async (id) => {
+    setTodos(todos.filter((todo) => todo.id !== id));
+    const options = {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+
+    try {
+      const resp = await fetch(BASE_URL + "/todos/" + id, options);
+      const data = await resp.json();
+      setTodos(data);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
